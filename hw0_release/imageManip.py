@@ -18,7 +18,7 @@ def load(image_path):
 
     ### YOUR CODE HERE
     # Use skimage io.imread
-    pass
+    out = io.imread(image_path)
     ### END YOUR CODE
 
     return out
@@ -38,7 +38,7 @@ def change_value(image):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = 0.5 * np.square(image)
     ### END YOUR CODE
 
     return out
@@ -46,7 +46,9 @@ def change_value(image):
 
 def convert_to_grey_scale(image):
     """ Change image to gray scale
+    rgb2gray converts RGB values to grayscale values by forming a weighted sum of the R, G, and B components:
 
+    0.2989 * R + 0.5870 * G + 0.1140 * B
     Args:
         image: numpy array of shape(image_height, image_width, 3)
 
@@ -56,9 +58,8 @@ def convert_to_grey_scale(image):
     out = None
 
     ### YOUR CODE HERE
-    pass
+    out = np.dot(image[...,:3], [0.299, 0.587, 0.114])
     ### END YOUR CODE
-
     return out
 
 def rgb_decomposition(image, channel):
@@ -73,9 +74,15 @@ def rgb_decomposition(image, channel):
     """
 
     out = None
-
+    out = image.copy()
     ### YOUR CODE HERE
-    pass
+    if channel == "R":
+        out[...,0] = 0
+    elif channel == "G":
+        out[...,1] = 0
+    else:
+        out[...,2] = 0
+    
     ### END YOUR CODE
 
     return out
@@ -92,10 +99,18 @@ def lab_decomposition(image, channel):
     """
 
     lab = color.rgb2lab(image)
-    out = None
+    out = image.copy()
 
     ### YOUR CODE HERE
-    pass
+    if channel == "L":
+        out[...,1] = 0
+        out[...,2] = 0
+    elif channel == "A":
+        out[...,0] = 0
+        out[...,2] = 0
+    else:
+        out[...,0] = 0
+        out[...,1] = 0
     ### END YOUR CODE
 
     return out
@@ -112,10 +127,18 @@ def hsv_decomposition(image, channel='H'):
     """
 
     hsv = color.rgb2hsv(image)
-    out = None
+    out = image.copy()
 
     ### YOUR CODE HERE
-    pass
+    if channel == "H":
+        out[...,1] = 0
+        out[...,2] = 0
+    elif channel == "S":
+        out[...,0] = 0
+        out[...,2] = 0
+    else:
+        out[...,0] = 0
+        out[...,1] = 0
     ### END YOUR CODE
 
     return out
@@ -135,8 +158,24 @@ def mix_images(image1, image2, channel1, channel2):
     """
 
     out = None
+    exclude = []
+    image1c = image1.copy()
+    image2c = image2.copy()
     ### YOUR CODE HERE
-    pass
+    for i in [channel1, channel2]:
+        if i == "R":
+            exclude.append(0)
+        elif i == "G":
+            exclude.append(1)
+        else:
+            exclude.append(2)
+            
+    image1c[..., exclude[0]] = 0
+    image2c[..., exclude[1]] = 0
+    width = image1c.shape[1]
+    out = np.zeros_like(image1)
+    out[:,:150,:] = image1c[:,:150,:]
+    out[:, 150:301, :] = image2c[:, 150:301, :]
     ### END YOUR CODE
 
     return out
