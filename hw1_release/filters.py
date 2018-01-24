@@ -160,7 +160,7 @@ def cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    out = conv_fast(f, np.flip(g[1:,], 1))
+    out = conv_fast(f, g[1:])
 
 
     return out
