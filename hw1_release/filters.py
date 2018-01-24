@@ -121,7 +121,7 @@ def conv_fast(image, kernel):
             imagecW = imageW + padW
 
             imageSub = imagec[(imagecH-padH):(imagecH+padH+1), (imagecW-padW):(imagecW+padW+1)]
-            out[imageH, imageW] = np.sum(imageSub * kernel)
+            out[imageH, imageW] = np.sum(imageSub * np.flip(kernel, 0))
     ### END YOUR CODE
 
     return out
@@ -160,7 +160,7 @@ def cross_correlation(f, g):
 
     out = None
     ### YOUR CODE HERE
-    out = conv_fast(f, g[1:])
+    out = conv_fast(f, np.flip(g[1:], 1))
 
 
     return out
