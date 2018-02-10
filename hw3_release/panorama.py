@@ -34,7 +34,13 @@ def harris_corners(img, window_size=3, k=0.04):
     dy = filters.sobel_h(img)
 
     ### YOUR CODE HERE
-    pass
+    dx_sq = np.square(dx)
+    dy_sq = np.square(dy)
+    dxy = dx * dy
+    Sx2 = convolve(dx_sq, window)
+    Sy2 = convolve(dy_sq, window)
+    Sxy = convolve(dxy, window)
+    response = Sx2 * Sy2 - np.square(Sxy) - k * np.square(Sx2 + Sy2)
     ### END YOUR CODE
 
     return response
@@ -60,7 +66,12 @@ def simple_descriptor(patch):
     """
     feature = []
     ### YOUR CODE HERE
-    pass
+    pMax = patch.max()
+    pMin = patch.min()
+    
+    aNorm = np.linalg.norm(patch)
+    tmp = patch / aNorm
+    feature = tmp.flatten()
     ### END YOUR CODE
     return feature
 
@@ -106,14 +117,23 @@ def match_descriptors(desc1, desc2, threshold=0.5):
     """
     matches = []
     
-    N = desc1.shape[0]
+    M = desc1.shape[0]
     dists = cdist(desc1, desc2)
 
     ### YOUR CODE HERE
-    pass
+    print(desc1.shape)
+    print(desc2.shape)
+    print(dists.shape)
+    for i in range(M):
+        aRow = dists[i,:]
+        smallest = np.partition(aRow, 0)[0]
+        secondSm = np.partition(aRow, 1)[1]
+        if smallest / secondSm <= threshold:
+           matches.append([i, np.argwhere(aRow == smallest)[0,0]])
+            
     ### END YOUR CODE
     
-    return matches
+    return np.array(matches)
 
 
 def fit_affine_matrix(p1, p2):
