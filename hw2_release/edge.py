@@ -85,9 +85,10 @@ def partial_x(img):
                    [0.5, 0.0, -0.5],
                    [0, 0.0, 0]])
     out = conv(img, np.flip(Dx, 1))
+    #outx = np.gradient(img, axis=1)
     ### END YOUR CODE
 
-    return out
+    return  out
 
 def partial_y(img):
     """ Computes partial y-derivative of input img.
@@ -108,9 +109,10 @@ def partial_y(img):
                   [0, 0, 0],
                   [0, -0.5, 0]])
     out = conv(img, np.flip(Dy, 0))
+    outy = np.gradient(img, axis=0)
     ### END YOUR CODE
 
-    return out
+    return  out
 
 def gradient(img):
     """ Returns gradient magnitude and direction of input img.
