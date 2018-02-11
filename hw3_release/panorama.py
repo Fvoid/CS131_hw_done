@@ -148,6 +148,7 @@ def fit_affine_matrix(p1, p2):
         
     Return:
         H: a matrix of shape (P * P) that transform p2 to p1.
+    https://stackoverflow.com/questions/20546182/how-to-perform-coordinates-affine-transformation-using-python-part-2/20555267
     """
 
     assert (p1.shape[0] == p2.shape[0]),\
@@ -156,7 +157,8 @@ def fit_affine_matrix(p1, p2):
     p2 = pad(p2)
 
     ### YOUR CODE HERE
-    pass
+    
+    H, res, rank, x = np.linalg.lstsq(p2, p1) 
     ### END YOUR CODE
 
     # Sometimes numerical issues cause least-squares to produce the last
@@ -193,15 +195,61 @@ def ransac(keypoints1, keypoints2, matches, n_iters=200, threshold=20):
     matched1 = pad(keypoints1[matches[:,0]])
     matched2 = pad(keypoints2[matches[:,1]])
 
-    max_inliers = np.zeros(N)
+    max_inliers = np.zeros(N, dtype="bool")
     n_inliers = 0
-
+    
     # RANSAC iteration start
     ### YOUR CODE HERE
-    pass
+    iteration = 0
+    while iteration < n_iters:
+        #matched2 is input, matched1 is output
+        #partition
+        all_index = np.arange(N)
+        train_index, test_index = random_partition(n_samples, all_index)
+        train_data_in = matched2[train_index]
+        train_data_out = matched1[train_index]
+        test_data_in = matched2[test_index]
+        test_data_out = matched1[test_index]
+        
+        #compute affine transformation
+        maybeModel = fit_in_model(train_data_in, train_data_out)
+        
+        #compute inliers
+        test_error = compute_error(test_data_in, test_data_out, maybeModel)
+        also_index = test_index[test_error < threshold]
+        cur_inliers = len(also_index) + n_samples
+        if cur_inliers > n_inliers:
+            n_inliers = cur_inliers
+            max_inliers[also_index] = True
+            max_inliers[train_index] = True
+            input_inliers = np.concatenate((train_data_in, matched2[also_index]))
+            output_inliers = np.concatenate((train_data_out, matched1[also_index]))
+            H = fit_in_model(input_inliers, output_inliers)
+        
+        iteration += 1
+        
     ### END YOUR CODE
     return H, matches[max_inliers]
 
+def compute_error(inputData, expectData, model):
+    actual = np.dot(inputData, model)
+    error = np.sum((expectData - actual)**2, axis=1)
+    return error
+
+def fit_in_model(inputVal, expectOutVal):
+    H, res, rank, x = np.linalg.lstsq(inputVal, expectOutVal)
+    H[:,2] = np.array([0, 0, 1])
+    return H
+
+def random_partition(n, data):
+    """
+    partition data into traning set and test set
+    from 0 to n row is training set, the rest is test set
+    """
+    np.random.shuffle(data)
+    training = data[:n]
+    testing = data[n:]
+    return training, testing
 
 def hog_descriptor(patch, pixels_per_cell=(8,8)):
     """
@@ -243,7 +291,25 @@ def hog_descriptor(patch, pixels_per_cell=(8,8)):
 
     # Compute histogram per cell
     ### YOUR CODE HERE
-    pass
+    #I copy someone's solution ~
+    block = np.zeros(shape=(rows, cols, n_bins), dtype=np.float32)
+    for aRow in range(rows):
+        for aCol in range(cols):
+            G_cells[aRow, aCol] = G_cells[aRow, aCol] / np.linalg.norm(G_cells[aRow, aCol])
+            for h in range(pixels_per_cell[0]):
+                for w in range(pixels_per_cell[1]):
+                    b0 = theta_cells[aRow, aCol][h,w] // degrees_per_bin
+                    if b0 >= n_bins:
+                        b0 = 0
+                    b1 = b0 + 1
+                    if b1 >= n_bins:
+                        b1 = 0
+                    b = theta_cells[aRow, aCol][h, w] % degrees_per_bin / degrees_per_bin
+                    block[aRow, aCol][int(b0)] += 1 - b
+                    block[aRow, aCol][int(b1)] += b
+    block = block / np.sum(block)
+    block = block.reshape(rows*cols*n_bins)
+                    
     ### YOUR CODE HERE
     
     return block
